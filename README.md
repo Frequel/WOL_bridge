@@ -16,7 +16,8 @@ This project makes use of several libraries. Install them through the Arduino Li
     ```bash
     lib_deps = https://github.com/a7md0/WakeOnLan.git
     ```
-2. **[fauxmoESP](https://bitbucket.org/xoseperez/fauxmoesp/src/master/)** - Allows Alexa integration for controlling ESP devices.
+2. **[fauxmoESP](https://github.com/vintlabs/fauxmoESP)** - Allows Alexa integration for controlling ESP devices.
+    - it depends on **[ESPAsyncTCP](https://github.com/ESP32Async/ESPAsyncTCP)**
 3. **[UniversalTelegramBot](https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot)** - Enables communication with Telegram bots.
 4. **ArduinoJson** - Handles JSON parsing required by the Telegram bot.
 
@@ -24,6 +25,15 @@ This project makes use of several libraries. Install them through the Arduino Li
 - ESP32 or ESP8266 module.
 - Local network access (Wi-Fi).
 - Alexa-enabled device (e.g., Amazon Echo) for voice control.
+
+## How to connect board ESP8266 to Arduine IDE
+1. go to **File> Preferences**
+2. Enter **http://arduino.esp8266.com/stable/package_esp8266com_index.json** into the “Additional Boards Manager URLs” field as shown in the figure below. Then, click the “OK” button
+3. Open the Boards Manager. Go to **Tools > Board > Boards Manager…**
+4. Search for **ESP8266** by **“ESP8266 by ESP8266 Community“**
+5. Select **2.5.2** version (if you select another version i cannot assure that WiFi connection will work, on version 3.1.2 it doesn't work)
+6. press install button
+7. now you can select **Generic ESP8266 Module** or whatever module do you have (e.g. WEMOS D1 mini) and COM port and be ready to flash
 
 ## How to Use
 ### 1. Wi-Fi Configuration
