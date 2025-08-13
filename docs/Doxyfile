@@ -1,0 +1,21 @@
+# Doxyfile Configuration
+
+# Project
+PROJECT_NAME           = "WOL Bridge"
+PROJECT_BRIEF          = "An ESP32/ESP8266 project that acts as a Wake-on-LAN (WOL) bridge."
+OUTPUT_DIRECTORY       = docs
+OPTIMIZE_OUTPUT_FOR_C  = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+
+# Sources
+INPUT                  = ../
+FILE_PATTERNS          = *.ino *.h
+RECURSIVE              = YES
+EXCLUDE                = ../docs
+
+# Output
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO

@@ -1,102 +1,83 @@
-# ESP32/ESP8266 Wake-on-LAN Bridge with Alexa and Telegram
+# ESP32/ESP8266 Wake-on-LAN (WOL) Bridge
 
-This project allows you to create a bridge using an ESP32 (or ESP8266) that can send Wake-on-LAN (WOL) magic packets to specific devices on your local network. The bridge can be controlled using Alexa voice commands or a Telegram bot, enabling you to remotely wake your computers or other devices. The project utilizes the **WakeOnLan** library for generating WOL packets and integrates with Alexa through **fauxmoESP** and Telegram bot API.
+This project transforms an ESP32 or ESP8266 into a versatile Wake-on-LAN (WOL) bridge, allowing you to wake up network devices remotely. It can be controlled via Amazon Alexa, a Telegram bot, or by relaying WOL packets from an external network.
 
 ## Features
-- Send Wake-on-LAN magic packets via Alexa voice commands.
-- Control via Telegram bot to wake up multiple devices.
-- Works with ESP32 or ESP8266 microcontrollers.
-- Can act as a network bridge to receive packets and trigger WOL.
-- Easy setup for local network configuration.
+- **Multiple Control Methods:** Wake devices using Alexa voice commands ("Alexa, turn on My PC") or a user-friendly Telegram bot.
+- **WOL Bridge/Relay:** Forwards WOL packets received from external networks to your local LAN. This is useful for waking devices when you are not on the same network (e.g., over a VPN).
+- **Easy Configuration:** All settings (Wi-Fi, Telegram token, devices) are centralized in a single `config.h` file.
+- **Multi-Device Support:** Configure and control multiple target devices.
+- **ESP32 & ESP8266 Compatible:** Works on both popular microcontrollers.
 
-## Libraries Used
-This project makes use of several libraries. Install them through the Arduino Library Manager or PlatformIO.
-
-1. **[WakeOnLan](https://github.com/a7md0/WakeOnLan)** - Generates and sends magic packets to wake devices on the same network.
-    ```bash
-    lib_deps = https://github.com/a7md0/WakeOnLan.git
-    ```
-2. **[fauxmoESP](https://github.com/vintlabs/fauxmoESP)** - Allows Alexa integration for controlling ESP devices.
-    - it depends on **[ESPAsyncTCP](https://github.com/ESP32Async/ESPAsyncTCP)**
-3. **[UniversalTelegramBot](https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot)** - Enables communication with Telegram bots.
-4. **ArduinoJson** - Handles JSON parsing required by the Telegram bot.
+## How it Works
+The device operates in three main ways:
+1.  **Alexa Integration:** It uses the `fauxmoESP` library to emulate Philips Hue devices on your network. When you ask Alexa to turn on a device, the ESP catches this command and sends a WOL magic packet to the corresponding MAC address.
+2.  **Telegram Bot:** It runs a simple Telegram bot that listens for commands. Sending `/wol` presents you with an inline keyboard of configured devices. Tapping a device name sends the WOL packet.
+3.  **WOL Bridge:** The device listens on the standard WOL UDP port (9). If it receives a magic packet from an IP address *outside* its own subnet, it validates the packet and re-broadcasts it to the local network. This allows WOL requests to traverse routers, which typically don't forward broadcast packets. To prevent packet loops, it ignores packets that originate from within its own subnet.
 
 ## Hardware Requirements
 - ESP32 or ESP8266 module.
 - Local network access (Wi-Fi).
-- Alexa-enabled device (e.g., Amazon Echo) for voice control.
+- An Alexa-enabled device (e.g., Amazon Echo) for voice control (optional).
+- A smartphone with Telegram for bot control (optional).
 
-## How to connect board ESP8266 to Arduine IDE
-1. go to **File> Preferences**
-2. Enter **http://arduino.esp8266.com/stable/package_esp8266com_index.json** into the “Additional Boards Manager URLs” field as shown in the figure below. Then, click the “OK” button
-3. Open the Boards Manager. Go to **Tools > Board > Boards Manager…**
-4. Search for **ESP8266** by **“ESP8266 by ESP8266 Community“**
-5. Select **2.5.2** version (if you select another version i cannot assure that WiFi connection will work, on version 3.1.2 it doesn't work)
-6. press install button
-7. now you can select **Generic ESP8266 Module** or whatever module do you have (e.g. WEMOS D1 mini) and COM port and be ready to flash
+## Libraries
+This project requires the following libraries. You can install them using the Arduino Library Manager or PlatformIO.
+- **[WakeOnLan](https://github.com/a7md0/WakeOnLan)** by a7md0
+- **[fauxmoESP](https://github.com/vintlabs/fauxmoESP)** by vintlabs
+- **[UniversalTelegramBot](https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot)** by witnessmenow
+- **ArduinoJson** by bblanchon
 
-## How to Use
-### 1. Wi-Fi Configuration
-Update the Wi-Fi SSID and password in the code:
-```cpp
-#define WIFI_SSID "your_wifi_ssid"
-#define WIFI_PASS "your_wifi_password"
+For PlatformIO, you can add the following to your `platformio.ini`:
+```ini
+lib_deps =
+  a7md0/WakeOnLan
+  vintlabs/fauxmoESP
+  witnessmenow/UniversalTelegramBot
+  bblanchon/ArduinoJson
 ```
 
-### 2. Alexa Integration
-The project integrates with Alexa using the `fauxmoESP` library. You can add virtual devices to be controlled by Alexa:
-```cpp
-fauxmo.addDevice("PC_TO");
-fauxmo.addDevice("PC_PE");
-```
-Commands like "Alexa, turn on PC_TO" will send a WOL packet to the configured device.
+## Setup and Configuration
+All configuration is done in the `config.h` file.
 
-### 3. Telegram Bot Integration
-Configure the bot by setting the token and MAC addresses for your devices:
-```cpp
-#define TELEGRAM_BOT_TOKEN "your_telegram_bot_token"
-targetDevice devices[] ={
-  {"50:EB:F6:1F:CF:95", "PC_TO"},
-  {"18:31:BF:B6:1E:4F", "PC_PE"}
-};
-```
-The bot responds to commands such as `/wol` to display a list of devices to wake.
-
-### 4. Wake-on-LAN
-The Wake-on-LAN functionality is implemented using the **WakeOnLan** library:
-```cpp
-const char *MAC_TO = "50:EB:F6:1F:CF:95";  // Replace with your device MAC
-WOL.sendMagicPacket(MAC_TO);
-```
-Ensure that WOL is enabled on the target devices and they are connected to the same network.
+1.  **Wi-Fi Credentials:** Set your network's SSID and password.
+    ```cpp
+    #define WIFI_SSID "Your_WiFi_SSID"
+    #define WIFI_PASS "Your_WiFi_Password"
+    ```
+2.  **Telegram Bot Token:** If you want to use the Telegram bot, create a bot using [BotFather](https://core.telegram.org/bots#botfather) and paste the token here.
+    ```cpp
+    #define TELEGRAM_BOT_TOKEN "YOUR_TELEGRAM_BOT_TOKEN"
+    ```
+3.  **Target Devices:** Add the devices you want to control to the `devices` array. The `deviceName` is used for both Alexa and the Telegram bot.
+    ```cpp
+    targetDevice devices[] = {
+      {"00:11:22:33:44:55", "My PC"},
+      {"AA:BB:CC:DD:EE:FF", "Laptop"},
+      // Add more devices here
+    };
+    ```
 
 ## Installation
-### Arduino IDE
-1. Install the required libraries from the Arduino Library Manager.
-2. Flash the code to your ESP32/ESP8266 using Arduino IDE.
+1.  **Install Libraries:** Install all the required libraries listed above.
+2.  **Configure:** Edit the `config.h` file with your details.
+3.  **Flash:** Upload the code to your ESP32 or ESP8266.
+4.  **Alexa Discovery:** Open the Alexa app and ask it to discover new devices. Your configured device names should appear.
+5.  **Telegram Bot:** Send the `/start` command to your bot in Telegram to begin.
 
-### PlatformIO
-In your `platformio.ini`, add:
-```ini
-lib_deps = 
-  https://github.com/a7md0/WakeOnLan.git
-  fauxmoESP
-  UniversalTelegramBot
-  ArduinoJson
+## Documentation
+The source code is commented using Doxygen-style comments. You can generate a full set of technical documentation by running Doxygen in the project's root directory.
+```bash
+# Make sure you are in the project root directory
+doxygen docs/Doxyfile
 ```
+This will generate HTML documentation in the `docs/html` folder.
 
-### Telegram Bot Setup
-1. Create a new bot using [BotFather](https://core.telegram.org/bots#botfather).
-2. Obtain the bot token and replace it in the code:
-   ```cpp
-   #define TELEGRAM_BOT_TOKEN "your_telegram_bot_token"
-   ```
-3. Send `/start` to your bot, and it will respond with available commands.
-
-### Alexa Setup
-Ensure that your Alexa device is on the same network as the ESP32/ESP8266. Devices will be automatically discovered by Alexa.
-
-## Sources of Inspiration
-This project was inspired by the following tutorials:
-- [Alexa with ESP32 and ESP8266 by Random Nerd Tutorials](https://randomnerdtutorials.com/alexa-echo-with-esp32-and-esp8266/)
-- [DIY LED Strip Voice Control with Alexa and ESP8266](https://www.makerluis.com/diy-led-strip-voice-control-with-alexa-and-esp8266/)
+## Troubleshooting
+- **Device Not Connecting to Wi-Fi:** Double-check your SSID and password in `config.h`. Check the Serial Monitor for connection error messages.
+- **Alexa Cannot Discover Devices:** Ensure your Alexa device and the ESP are on the same Wi-Fi network. Make sure no other service is using port 80 on your network.
+- **Telegram Bot Not Responding:** Verify your `TELEGRAM_BOT_TOKEN` is correct. For ESP8266, you may need to uncomment `client.setInsecure()` in `WOL_bridge.ino` if you are having SSL/TLS certificate issues, but be aware of the security implications.
+- **WOL Not Working:**
+    - Confirm that Wake-on-LAN is enabled in the BIOS/UEFI and the network adapter settings of the target computer.
+    - Verify the MAC address in `config.h` is correct and in the format `XX:XX:XX:XX:XX:XX`.
+    - Ensure the target device is connected to the network via an Ethernet cable (WOL over Wi-Fi is unreliable and not universally supported).
